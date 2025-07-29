@@ -1,41 +1,34 @@
-<?php 
-    
-    $id = $_GET['id'];
-    $id = filter_var($id, FILTER_VALIDATE_INT);
-    
-    if (!$id) {
-        header('location: /');
-    }
-    
+<?php
     //Importar la DB
-    require __DIR__ . '/includes/config/database.php';
+    require __DIR__ . '/../config/database.php';
     $db = conectarDB();
 
     //Consultar
-    $query = "SELECT * FROM propiedades WHERE id = {$id}";
+    $query = "SELECT * FROM propiedades LIMIT {$limiteAnuncios}";
 
     //Obtener Resultados
     $resultado = mysqli_query($db, $query);
 
-    if (!$resultado->num_rows) {
-        header('location: /');
-    }
 
 
-    $propiedad = mysqli_fetch_assoc($resultado);
-    
-    require 'includes/funciones.php';
-
-    incluirTemplate('header');
 ?>
-    
-    <main class="contenedor seccion contenido-centrado">
-        <h1> <?php echo $propiedad['titulo']; ?></h1>
 
-        <img loading="lazy" src="imagenes/<?php echo $propiedad['imagen']; ?>" alt="Imagen de la Propiedad">
 
-        <div class="resumen-propiedad">
+
+
+<div class="contenedor-anuncio">
+
+    <?php while ($propiedad = mysqli_fetch_assoc($resultado)): ?>
+
+    <div class="anuncio">
+
+        <img loading="lazy" src="/imagenes/<?php echo $propiedad['imagen']; ?>" alt="Anuncio">
+
+        <div class="contenido-anuncio">
+            <h3><?php echo $propiedad['titulo']; ?></h3>
+            <p><?php echo $propiedad['descripcion']; ?></p>
             <p class="precio">$<?php echo $propiedad['precio']; ?></p>
+
             <ul class="iconos-caracteristicas">
                 <li>
                     <img class="icono" src="build/img/icono_wc.svg" alt="Icono wc">
@@ -53,14 +46,17 @@
                 </li>
             </ul>
 
-            <p><?php echo $propiedad['descripcion']; ?></p>
+            <a href="anuncio.php?id=<?php echo $propiedad['id']; ?>" class="boton boton-amarilloB">Ver Propiedad</a>
+
         </div>
-    </main>
+    </div>
 
-<?php 
+    <?php endwhile; ?>
 
+</div>
+
+<?php
     //Cerrar Conexion
     mysqli_close($db);
 
-    incluirTemplate('footer');
 ?>

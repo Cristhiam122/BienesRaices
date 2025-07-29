@@ -1,5 +1,5 @@
 <?php 
-    // Base de Datos
+    // Conectar DB
 
     require '../../includes/config/database.php';
     $db = conectarDB();
@@ -55,8 +55,8 @@
         if(!$vendedores_id) {$errores[] = "Debes seleccionar un vendedor";}
         if(!$imagen['name']){$errores[] = "la Fotografia de la propiedad es obligatoria";}
 
-        //Validar Tamaño de la imagen (maximo 100Kb)
-        $max_img = 1000 * 100;
+        //Validar Tamaño de la imagen (maximo 100Mb)
+        $max_img = 1000 * 1000;
 
         if ($imagen['size'] > $max_img) {
             $errores[] = "La imagen es muy pesada";
@@ -70,9 +70,28 @@
         // Revisar que no haya errores en el arreglo de errores
 
         if(empty($errores)) {
-            // Insertar en la Base de datos
+            
+            // *  SUBIDA DE ARCHIVOS A LA DB
+            
+            // Crear Carpeta
+            $carpetaImagenes = '../../imagenes/';
 
-            $query = "INSERT INTO propiedades (titulo, precio, descripcion, habitaciones, wc, estacionamiento, creado, vendedores_id) VALUES ('$titulo', '$precio', '$descripcion', '$habitaciones', '$wc', '$estacionamiento', '$creado', '$vendedores_id')";
+            if (!is_dir($carpetaImagenes)) {
+                mkdir($carpetaImagenes);
+            }
+            
+            // Generar nombre para la imagen
+
+            $nombreImagen = md5(uniqid(rand(), true)) . ".jpg";
+
+            // Subir imagen
+
+            move_uploaded_file($imagen['tmp_name'], $carpetaImagenes . $nombreImagen);
+
+
+            // * Insertar en la Base de datos
+
+            $query = "INSERT INTO propiedades (titulo, precio, imagen, descripcion, habitaciones, wc, estacionamiento, creado, vendedores_id) VALUES ('$titulo', '$precio', '$nombreImagen', '$descripcion', '$habitaciones', '$wc', '$estacionamiento', '$creado', '$vendedores_id')";
 
             // echo $query;
 
@@ -80,7 +99,7 @@
             if($resultado){
                 //Redireccionar al usuario una vez se agregue a la DB
 
-                header('location: /admin');
+                header('location: /admin?resultado=1');
             }
         }
 
@@ -94,7 +113,7 @@
 ?>
 
     <main class="contenedor seccion">
-        <h1>Crear</h1>
+        <h1>Crear Nueva Propiedad</h1>
 
         <a href="/admin" class="boton boton-verde">Volver</a>
 
@@ -139,7 +158,7 @@
             </fieldset>
 
             <fieldset>
-                <legend>Venderdor</legend>
+                <legend>Vendedor</legend>
 
                 <select name="vendedor" id="">
                     <option value="">-- Seleccione --</option>

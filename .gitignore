@@ -1,6 +1,6 @@
 /node_modules
 /build
 /includes/config/database.php
-info.php
 DB_Bienes_Raices.mwb
 DB_Bienes_Raices.mwb.bak
+/imagenes
