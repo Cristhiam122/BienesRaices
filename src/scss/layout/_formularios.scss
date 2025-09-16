@@ -48,3 +48,18 @@
         width: auto;
     }
 }
+.grupoId {
+    display: grid;
+    grid-template-columns: 1fr 4fr;
+    gap: 2rem;
+
+    div {
+        display: flex;
+        flex-direction: column;
+
+    }
+
+    select {
+        height: 4rem;
+    }
+}

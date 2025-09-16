@@ -1,0 +1,17 @@
+{
+    "name": "crica/bienes-raices",
+    "description": "Sitio web de compra y venta de bienesRaices",
+    "authors": [
+        {
+            "name": "Cristhiam Aguirre"
+        }
+    ],
+    "require": {
+        "intervention/image": "^3.11"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\" : "./class"
+        }
+    }
+}
