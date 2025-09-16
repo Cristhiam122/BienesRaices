@@ -1,97 +1,82 @@
-const {src, dest, watch, parallel, series} = require('gulp');
- 
- 
-//css
-const sass = require('gulp-sass')(require('sass'));
-const cssnano = require('cssnano');
-const postcss = require('gulp-postcss');
-//js
-const autoPrefixer = require('autoprefixer');
-const sourcemaps = require('gulp-sourcemaps');
-const concat = require('gulp-concat');
-const terser = require('gulp-terser-js');
-//img
-const webp =require('gulp-webp');
-const imagemin = require('gulp-imagemin');
-const cache = require('gulp-cache');
-const avif = require('gulp-avif');
-//svg
-const svg = require('gulp-svgmin');
- 
-const path = {
+import path from 'path'
+import fs from 'fs'
+import { glob } from 'glob'
+import { src, dest, watch, series } from 'gulp'
+import * as dartSass from 'sass'
+import gulpSass from 'gulp-sass'
+import concat from 'gulp-concat'
+import terser from 'gulp-terser'
+import sharp from 'sharp'
+import rename from 'gulp-rename'
+
+const sass = gulpSass(dartSass)
+
+const paths = {
     scss: 'src/scss/**/*.scss',
-    css: 'build/css/app.css',
-    js: 'src/js/**/*.js',
-    img: 'src/img/**/*.{jpg,png}',
-    imgmin: 'build/img/**/*.{jpg,png}',
-    svg: 'src/img/**/*.svg'
+    js: 'src/js/**/*.js'
 }
- 
- 
-function compileSass() {
-    return src(path.scss)
-        .pipe(sourcemaps.init())
-        .pipe(sass().on('error', sass.logError))
-        .pipe(postcss([autoPrefixer(),cssnano()]))
-        .pipe(sourcemaps.write('.'))
-        .pipe(dest('build/css'));
+
+export function css( done ) {
+    src(paths.scss, {sourcemaps: true})
+        .pipe( sass({
+            outputStyle: 'compressed'
+        }).on('error', sass.logError) )
+        .pipe( dest('./build/css', {sourcemaps: '.'}) );
+    done()
 }
- 
-function compileJS(){
-    return src(path.js)
-        .pipe(sourcemaps.init())
-        .pipe(concat('bundle.js'))
-        .pipe(terser())
-        .pipe(sourcemaps.write('.'))
-        .pipe(dest('build/js'));
+
+export function js( done ) {
+    src(paths.js)
+      .pipe(concat('bundle.js')) // final output file name
+      .pipe(terser())
+      .pipe(rename({ suffix: '.min' }))
+      .pipe(dest('./build/js'))
+    done()
 }
- 
- 
-function imageMin(){
-    const settings= {
-        optimizationLevel:3
+
+export async function imagenes(done) {
+    const srcDir = './src/img';
+    const buildDir = './build/img';
+    const images =  await glob('./src/img/**/*')
+
+    images.forEach(file => {
+        const relativePath = path.relative(srcDir, path.dirname(file));
+        const outputSubDir = path.join(buildDir, relativePath);
+        procesarImagenes(file, outputSubDir);
+    });
+    done();
+}
+
+function procesarImagenes(file, outputSubDir) {
+    if (!fs.existsSync(outputSubDir)) {
+        fs.mkdirSync(outputSubDir, { recursive: true })
     }
- 
-    return src(path.img)
-        .pipe(cache(imagemin(settings)))
-        .pipe(dest('build/img'));
-}
- 
- 
-function imgWebp(){
- 
-    const settings={
-        quality:50
+    const baseName = path.basename(file, path.extname(file))
+    const extName = path.extname(file)
+
+    if (extName.toLowerCase() === '.svg') {
+        // If it's an SVG file, move it to the output directory
+        const outputFile = path.join(outputSubDir, `${baseName}${extName}`);
+    fs.copyFileSync(file, outputFile);
+    } else {
+        // For other image formats, process them with sharp
+        const outputFile = path.join(outputSubDir, `${baseName}${extName}`);
+        const outputFileWebp = path.join(outputSubDir, `${baseName}.webp`);
+        const outputFileAvif = path.join(outputSubDir, `${baseName}.avif`);
+        const options = { quality: 80 };
+
+        sharp(file).jpeg(options).toFile(outputFile);
+        sharp(file).webp(options).toFile(outputFileWebp);
+        sharp(file).avif().toFile(outputFileAvif);
     }
- 
-    return src(path.img)
-        .pipe(webp(settings))
-        .pipe(dest('build/img'));
 }
- 
- 
-function imgAvif(){
-    const settings = {
-        quality:50
-    }
- 
-    return src(path.img)
-        .pipe(avif(settings))
-        .pipe(dest('build/img'));
+
+
+
+export function dev() {
+    watch( paths.scss, css );
+    watch( paths.js, js );
+    watch('src/img/**/*.{png,jpg}', imagenes)
 }
- 
- 
-function imgSvg(){
-    return src(path.svg)
-        .pipe(svg())
-        .pipe(dest('build/img'));
-}
- 
- 
-function autoCompile(){
-    watch(path.scss,compileSass);
-    watch(path.js, compileJS);
-    watch(path.img, parallel(imgAvif,imgWebp,imageMin));
-}
- 
-exports.default = parallel(compileSass,compileJS,autoCompile,imgAvif,imageMin,imgWebp, imgSvg);
+
+export default series( js, css, imagenes, dev )

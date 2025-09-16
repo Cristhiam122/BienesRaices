@@ -14,16 +14,16 @@
     padding: 1rem 0 3rem 0;
 
     &.inicio {
+        background-position: center center;
+        background-size: cover;
+
         @include m.tablet {
-            background-position: center center;
-            background-size: cover;
             min-height: 70rem;
         }
 
         .contenido-header {
             @include m.tablet {
-                background-position: center center;
-                background-size: cover;
+
                 min-height: 70rem;
             }
         }
