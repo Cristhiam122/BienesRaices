@@ -21,7 +21,7 @@ export function css( done ) {
         .pipe( sass({
             outputStyle: 'compressed'
         }).on('error', sass.logError) )
-        .pipe( dest('./build/css', {sourcemaps: '.'}) );
+        .pipe( dest('./public/build/css', {sourcemaps: '.'}) );
     done()
 }
 
@@ -30,13 +30,13 @@ export function js( done ) {
       .pipe(concat('bundle.js')) // final output file name
       .pipe(terser())
       .pipe(rename({ suffix: '.min' }))
-      .pipe(dest('./build/js'))
+      .pipe(dest('./public/build/js'))
     done()
 }
 
 export async function imagenes(done) {
     const srcDir = './src/img';
-    const buildDir = './build/img';
+    const buildDir = './public/build/img';
     const images =  await glob('./src/img/**/*')
 
     images.forEach(file => {
