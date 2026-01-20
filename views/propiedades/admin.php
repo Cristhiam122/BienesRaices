@@ -1,0 +1,1 @@
+<h1>propiedades</h1>
